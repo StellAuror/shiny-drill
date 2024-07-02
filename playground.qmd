@@ -1,0 +1,63 @@
+```{r}
+# Ładowanie pakietów
+library(dplyr)
+library(visNetwork)
+
+# Funkcja do generowania sieci
+generate_network <- function(order_sku_relations, sku_stock_relations, selected_object) {
+  # Łączenie danych
+  combined_data <- order_sku_relations %>%
+    inner_join(sku_stock_relations, by = "SKU")
+  
+  # Filtrowanie powiązań dla wybranego obiektu
+  filtered_data <- combined_data %>%
+    filter(Order == selected_object | SKU == selected_object | Stock == selected_object)
+  
+  # Tworzenie unikalnych węzłów
+  nodes <- data.frame(
+    id = unique(c(filtered_data$Order, filtered_data$SKU, filtered_data$Stock)),
+    label = unique(c(filtered_data$Order, filtered_data$SKU, filtered_data$Stock))
+  )
+  
+  # Tworzenie krawędzi
+  edges <- data.frame(
+    from = c(filtered_data$Order, filtered_data$SKU),
+    to = c(filtered_data$SKU, filtered_data$Stock)
+  )
+  
+  # Generowanie diagramu sieciowego
+  visNetwork(nodes, edges) %>%
+    visEdges(arrows = "to") %>%
+    visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE)
+}
+
+# Przykładowe dane
+num_orders <- 10
+num_stocks <- 5
+num_skus <- 20
+
+orders <- paste0("Order_", 1:num_orders)
+stocks <- paste0("Stock_", 1:num_stocks)
+skus <- paste0("SKU_", 1:num_skus)
+
+num_order_sku <- 30
+num_sku_stock <- 30
+
+set.seed(123)
+order_sku_relations <- data.frame(
+  Order = sample(orders, num_order_sku, replace = TRUE),
+  SKU = sample(skus, num_order_sku, replace = TRUE)
+)
+
+sku_stock_relations <- data.frame(
+  SKU = sample(skus, num_sku_stock, replace = TRUE),
+  Stock = sample(stocks, num_sku_stock, replace = TRUE)
+)
+
+# Wywołanie funkcji
+generate_network(order_sku_relations, sku_stock_relations, "Order_1")
+
+
+
+```
+
